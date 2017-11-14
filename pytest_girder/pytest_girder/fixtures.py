@@ -1,12 +1,14 @@
 import cherrypy
 import hashlib
+import mock
 import pytest
+from pytest_mongodb.plugin import mongo_engine
 
 from .utils import request
 
 
 @pytest.fixture
-def db(request):
+def db(request, mongodb):
     """
     Require a Mongo test database.
 
@@ -16,27 +18,35 @@ def db(request):
     """
     from girder.models import _dbClients, getDbConnection
     from girder.models.model_base import _modelSingletons
+    from girder.external import mongodb_proxy
 
-    dbUri = request.config.getoption('--mongo-uri')
-    dbName = 'girder_test_%s' % hashlib.md5(request.node.name.encode('utf8')).hexdigest()
-    dropDb = request.config.getoption('--drop-db')
-    connection = getDbConnection(uri='%s/%s' % (dbUri, dbName), quiet=False)
+    if mongo_engine() == 'mongomock':
+        executable_methods = mongodb_proxy.EXECUTABLE_MONGO_METHODS
+        mongodb_proxy.EXECUTABLE_MONGO_METHODS = set()
+        with mock.patch('girder.models.pymongo.MongoClient', return_value=mongodb.client):
+            yield mongodb.client
+        mongodb_proxy.EXECUTABLE_MONGO_METHODS = executable_methods
+    else:
+        dbUri = request.config.getoption('--mongo-uri')
+        dbName = 'girder_test_%s' % hashlib.md5(request.node.name.encode('utf8')).hexdigest()
+        dropDb = request.config.getoption('--drop-db')
+        connection = getDbConnection(uri='%s/%s' % (dbUri, dbName), quiet=False)
 
-    # Force getDbConnection from models to return our connection
-    _dbClients[(None, None)] = connection
+        # Force getDbConnection from models to return our connection
+        _dbClients[(None, None)] = connection
 
-    if dropDb == 'pre':
-        connection.drop_database(dbName)
+        if dropDb == 'pre':
+            connection.drop_database(dbName)
 
-    for model in _modelSingletons:
-        model.reconnect()
+        for model in _modelSingletons:
+            model.reconnect()
 
-    yield connection
+        yield connection
 
-    if dropDb == 'post':
-        connection.drop_database(dbName)
+        if dropDb == 'post':
+            connection.drop_database(dbName)
 
-    connection.close()
+        connection.close()
 
 
 @pytest.fixture
