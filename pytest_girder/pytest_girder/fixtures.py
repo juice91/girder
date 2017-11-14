@@ -7,6 +7,16 @@ from pytest_mongodb.plugin import mongo_engine
 from .utils import request
 
 
+@pytest.fixture(autouse=True)
+def bcrypt():
+    """
+    Mock out bcrypt password hashing to avoid unecessary testing bottlenecks.
+    """
+    with mock.patch('bcrypt.hashpw') as hashpw:
+        hashpw.side_effect = lambda x, y: x
+        yield hashpw
+
+
 @pytest.fixture
 def db(request, mongodb):
     """

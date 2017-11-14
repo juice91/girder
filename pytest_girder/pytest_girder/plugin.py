@@ -1,4 +1,4 @@
-from .fixtures import server, db, admin, user
+from .fixtures import server, db, admin, user, bcrypt
 
 def pytest_addoption(parser):
     group = parser.getgroup('girder')
