@@ -304,6 +304,24 @@ describe('Test collection actions', function () {
             return $('#g-confirm-button:visible').length > 0;
         }, 'delete confirmation to appear');
 
+        waitsFor(function () {
+            $('#g-confirm-text').val('DELETE wrongName');
+            return $('#g-confirm-text').val() === 'DELETE wrongName';
+        }, 'enter the wrong message of delete confirmation');
+
+        runs(function () {
+            $('#g-confirm-button').click();
+        });
+
+        waitsFor(function () {
+            return $('.g-msg-error').is(':visible');
+        }, 'error message to be displayed');
+
+        waitsFor(function () {
+            $('#g-confirm-text').val('DELETE collName0');
+            return $('#g-confirm-text').val() === 'DELETE collName0';
+        }, 'enter the wrong message of delete confirmation');
+
         runs(function () {
             $('#g-confirm-button').click();
         });
