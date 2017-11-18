@@ -1,3 +1,16 @@
+sudo pip install -U virtualenv pip
+Now create a virtual environment using the virtualenv command. You can place the virtual environment directory wherever you want, but it should not be moved. The following command will generate a new directory called girder_env in your home directory:
+virtualenv ~/girder_env
+Enter the virtual environment:
+
+. ~/girder_env/bin/activate
+
+dependency:
+pip install -e .
+
+girder-install web
+
+
 |logo| Girder |build-status| |docs-status| |license-badge| |gitter-badge| |codecov-badge|
 =========================================================================================
 
